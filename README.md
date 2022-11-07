@@ -1,4 +1,4 @@
-# auctionbox
+# ECAC
 
 To compile the contract, execute below commands
 

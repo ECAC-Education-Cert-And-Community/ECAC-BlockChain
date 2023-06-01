@@ -23,11 +23,10 @@ contract UserContract {
         users[msg.sender] = user;
     }
 
-    function addUser() public {
-        if (!users[msg.sender].initialized) {
+    function addUser(address _userAddress) public {
+        if (!users[_userAddress].initialized) {
             initializeUser();
         }
-        
     }
 
     // Point 조회

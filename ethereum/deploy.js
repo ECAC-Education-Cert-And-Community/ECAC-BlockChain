@@ -6,9 +6,9 @@ const Web3 = require('web3');
 const compiledABox = require('./build/ECAC_SmartContract.json');
 
  const provider = new HDWalletProvider(
-  'metamask의 12개 단어를 적어주세요.',
+  'rifle debate canoe ship program enable dilemma shed asthma brick cup memory',
   // remember to change this to your own phrase!
-  'http://192.168.56.104:8545'//가상머신의 ip주소를 적어주세요.
+  'http://192.168.56.101:8545'//가상머신의 ip주소를 적어주세요.
   // remember to change this to your own endpoint!
 );
 
@@ -19,7 +19,7 @@ const web3 = new Web3(provider);
 const deploy = async () => {
     const accounts = await web3.eth.getAccounts();
     console.log(accounts);
-    let txn;
+    var txn = accounts[0];
     console.log('Attempting to deploy using account ' + accounts[0]);
     console.log('abi ' + compiledABox.abi); 
 //    console.log('bytecode ' + compiledABox.evm.bytecode.object); 

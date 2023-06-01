@@ -1,105 +1,62 @@
 pragma solidity ^0.6.0;
 
- 
-
-contract ECAC_SmartContract {
-
-    uint point;
-
- 
-
-    /* 단일 사용자에 대한 구조체 */
-
+contract UserContract {
     struct User {
-
-        int likes;
-
-        int nestedComments;
-
-        int likesCount;
-
-        int nestedCommentsCount;
-
+        uint reflectedLikes;
+        uint reflectedNestedComments;
+        uint point;
+        bool initialized;
     }
-
- 
-
-    /* User 구조체를 저장하는 상태변수 */
-
-    mapping(address => User) public users;
-
- 
-
     
-
-    /* 생성자 */
-
-    constructor() public {
-
-        point = 0;
-
+    mapping(address => User) public users;
+    
+    // 초기화 함수
+    // 여기서 id 는 사용자가 가입했을 때의 DB에 나오는 기본 번호로 가정
+    function initializeUser() private {
+        User memory user = User({
+            reflectedLikes: 0,
+            reflectedNestedComments: 0,
+            point: 0,
+            initialized: true
+        });
+    
+        users[msg.sender] = user;
     }
 
- 
-
-    /* Point 조회 */
-
-    function getCount() public view returns(uint) {
-
-        return point;
-
+    function addUser() public {
+        if (!users[msg.sender].initialized) {
+            initializeUser();
+        }
+        
     }
 
- 
+    // Point 조회
+    function getCount(address _userAddress) public view returns (uint) {
+        return users[_userAddress].point;
+    }
 
-    /* 좋아요에 따른 Point 부여 - 100개당 100p */
 
-    function addPoint_likes(uint likes, uint likesCount) public {
-
+    // 좋아요에 따른 Point 지급 - 100개 당 100p
+    function addPoint_likes(address _userAddress, uint likes) public {
         uint likesHundred = likes / 100;
-
- 
-
-        if (likesHundred > likesCount) {
-
-        point = point + ((likesHundred-likesCount)*100);
-
-        likesCount += (likesHundred-likesCount);
-
+        if (likesHundred > users[_userAddress].reflectedLikes) {
+            users[_userAddress].point += ((likesHundred-users[_userAddress].reflectedLikes)*100);
+            users[_userAddress].reflectedLikes += (likesHundred-users[_userAddress].reflectedLikes);
         }
-
     }
 
- 
-
-    /* 대댓글에 따른 Point 부여 - 20개당 100p */ 
-
-    function addPoint_nestedComments(uint nestedComments, uint nestedCommentsCount) public {
-
-        uint nestedCommentsHundred = nestedComments / 20;
-
-  
-
-        if (nestedCommentsHundred > nestedCommentsCount) {
-
- 
-
-        point = point + ((nestedCommentsHundred-nestedCommentsCount)*100);
-
-        nestedCommentsCount += (nestedCommentsHundred-nestedCommentsCount);
-
+    // 대댓글에 따른 Point 지급 - 20개 당 100p
+    function addPoint_nestedComments(address _userAddress, uint nestedComments) public {
+        uint nestedCommentsTwenty = nestedComments / 20;
+        if (nestedCommentsTwenty > users[_userAddress].reflectedNestedComments) {
+            users[_userAddress].point +=  ((nestedCommentsTwenty-users[_userAddress].reflectedNestedComments)*100);
+            users[_userAddress].reflectedNestedComments += (nestedCommentsTwenty-users[_userAddress].reflectedNestedComments);
         }
-
     }
 
- 
-
-    /* 사용자가 입력한 포인트 환급 */
-
-    function refunds (uint input) public {
-
-        point = point - input;
-
+    // 사용자 입력에 따른 포인트 지급
+    function refunds(address _userAddress, uint input) public {
+        users[_userAddress].point -= input;
     }
 
 }

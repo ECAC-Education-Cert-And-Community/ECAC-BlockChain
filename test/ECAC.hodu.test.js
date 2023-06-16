@@ -19,14 +19,12 @@ moment.tz.setDefault("Asia/Seoul");
 
 let accounts = [];
 // likes와 reflectedLikes 지정
-let likes = 301;
-let reflectedLikes = 0;
+let likes = 421;
 
 // nestedComments와 Count지정
 let nestedComments = 21;
-let reflectedNestedComments = 0;
 
-let account;
+let account, account3, account4, account5, account8;
 let address;
 
 // 포인트 검증하기 위한 변수
@@ -37,157 +35,81 @@ let input = 100;
 
 // 스마트 컨트랙트 받아오기 위한 변수
 let box;
-
+// 새로운 계좌 생성할 때 받아올 변수
+let newAccount;
 
 
 beforeEach(async () => {
 
     accounts = await web3.eth.getAccounts();
-    account = accounts[3];
+    account3 = accounts[3];
+    account4 = accounts[4];
+    account5 = accounts[5];
+    account8 = accounts[8];
 
     // 주소 체크섬 오류 해결 -> 스마트컨트랙트 배포 주소
-    address = web3.utils.toChecksumAddress('0xf16D8b31817F76dD5F143eA73e61bCa1D86Bdbca')
+    address = web3.utils.toChecksumAddress('0x3b6d00DE1373ccbEbeA835FF76825DBB7F0bC7c4')
 
     box = new web3.eth.Contract(
         compiledBox.abi,
         // compiledAbi,
         address
     );
-    await box.methods.addUser(account).call();
+    await box.methods.addUser(account3).call();
+    await box.methods.addUser(account4).call();
+    await box.methods.addUser(account5).call();
+    await box.methods.addUser(account8).call();
 
     // 주소 unlock
     web3.eth.personal.unlockAccount(accounts[0], '', 0);
     web3.eth.personal.unlockAccount(accounts[3], '', 0);
+    web3.eth.personal.unlockAccount(accounts[4], '', 0);
+    web3.eth.personal.unlockAccount(accounts[5], '', 0);
+    web3.eth.personal.unlockAccount(accounts[8], '', 0);
 
-    // try-catch문으로 모든 것이 실행되기 전에 시나리오에서처럼 포인트가 얼마 있는지 확인해보면 된다.
-    await box.methods.getCount(account).call((error, result) => {
-        if (error) {
-            console.error('Error:', error);
-        } else {
-            console.log('Count:', result);
+});
+
+describe('[1: 계좌 생성]', () => {
+
+    it('계좌 생성하기', async () => {        
+        try {
+            newAccount = web3.eth.accounts.create();
+            console.log('생성 성공');
         }
+        catch (err) {
+            console.error('생성 실패:', err);
+        }
+        // 새로 생성한 계좌 정보
+        console.log('New Account Address:', newAccount.address);
+        console.log('New Account Private Key:', newAccount.privateKey);
     });
 });
 
-// //스마트 컨트랙트가 선언된 변수에 맞게 정확히 생성되었는지 테스트
-// describe("[Testcase 1 : check if the smart contract has been created as set in the variables]", () => {
 
-//     //getAccounts한 결과 그대로 accounts 변수에 지정되어 생성되었는가
-//     it("1.1. Is the token(=box) accounts the same as set in the variable?", async function () {
-//         (await await web3.eth.getAccounts()).should.eq(accounts);
-//     });
 
-//     //토큰 box의 likes와 reflectedLikes 지정된 값으로 생성되었는가
-//     it("1.2. Is the token(=box) likes and reflectedLikes the same as set in the variable?", async function () {
-//         (await box.methods.addPoint_likes(likes, reflectedLikes));
-//     });
+describe('[2: 송금]', () => {
 
-//     //토큰 box의 nestedComments와 reflectedNestedComments 지정된 값으로 생성되었는가
-//     it("1.3. Is the token(=box) nestedComments and reflectedNestedComments is the same as set in the variable?", async function () {
-//         (await box.methods.addPoint_nestedComments(nestedComments, reflectedNestedComments));
-//     });
-
-// });
-
-// 좋아요 클릭에 대한 테스트
-describe('[Testcase 2 : check ECAC Smart Contract for addPoint_likes()]', () => {
-
-    it('2. Is the function addPoint_likes() running correctly?', async () => {
-        let result;
-        check_point = Math.floor(await box.methods.getCount(account).call());
+    it('송금 메서드 작성', async () => {
+        const amountToSend = web3.utils.toWei('0.5', 'ether');
+        var balance1 = await web3.eth.getBalance(newAccount.address);
+        console.log("Get Receipient Balance Before : " + balance1);
+        var balance2 = await web3.eth.getBalance(accounts[0]);
+        console.log("Get Sender Balance Before : " + balance2);
         try {
-            // 좋아요가 추가되었을 때 실행하면 사용자에게 100포인트를 지급해주는 함수 
-            // likes만 있어도 나머지를 계산할 수 있는데, reflectedLikes 파라미터 제거 (조작 가능, 스마트컨트랙트 안에서만 처리필요)
-            await box.methods.addPoint_likes(account, likes).send({
-                from: account, 
-                gas: 1000000
-            }).then((receipt) => {
-                // console.log("Transaction receipt: ", receipt);
-                console.error("addPoint_likes SUCCESS");
-            }).catch((error) => {
-                console.error("Error: ", error);
-            });
+            const transact = {
+                from: accounts[0],
+                to: newAccount.address,
+                value: amountToSend,
+            };
+            const receipt = await web3.eth.sendTransaction(transact);
+            console.log('송금 완료');
         }
         catch (err) {
-            console.log(err.message);
-            console.log("==========에러 실행되고 있는가?==========");
+            console.error('송금 실패:', err);
         }
-
-        // 위의 addPoint_likes()가 제대로 실행되었다면, getCount를 했을 때 포인트를 지급받은 상황일 것임.
-        console.log("User's Point after addPoint_likes() is : " + await box.methods.getCount(account).call());
+        balance1 = await web3.eth.getBalance(newAccount.address);
+        console.log("Get Receipient Balance After : " + balance1);
+        balance2 = await web3.eth.getBalance(accounts[0]);
+        console.log("Get Sender Balance After : " + balance2);
     });
-
-    // it('2.2. Did the function addPoint_likes() give points to the user?', async () => {
-    //     // 비교- 검증 부분 추가 (0 point -> 200 point 된 상황이어야함.)
-    //     assert.equal(await box.methods.getCount(account).call(),200);
-    // });
-});
-
-
-// 대댓글 작성에 대한 테스트
-describe('[Testcase 3 : check ECAC Smart Contract for addPoint_nestedComments()]', () => {
-
-    it('3.1. Is the function addPoint_nestedComments() running correctly?', async () => {
-        let result;
-        check_point = Math.floor(await box.methods.getCount(account).call());
-        try {
-            // 대댓글이 추가되었을 때 실행하면 사용자에게 100포인트를 지급해주는 함수 
-            await box.methods.addPoint_nestedComments(account, nestedComments).send({
-                from: accounts[0], 
-                gas: 1000000
-            }).then((receipt) => {
-                // console.log("Transaction receipt: ", receipt);
-                console.error("addPoint_nestedComments SUCCESS");
-            }).catch((error) => {
-                console.error("Error: ", error);
-            });
-            result = await box.methods.getCount(account).call();
-            // console.log("The number of result: ", result);
-            // 포인트 확인 위한 계산
-            check_point += (Math.floor(nestedComments/20)-reflectedNestedComments)*100;
-        }
-        catch (err) {
-            console.log(err.message);
-            console.log("==========에러 실행되고 있는가?==========");
-        }
-
-        // 위의 addPoint_nestedComments ()가 제대로 실행되었다면, getCount를 했을 때 포인트를 지급받은 상황일 것임.
-        let point_nestedComment = await box.methods.getCount(account).call();
-        console.log("User's Point after addPoint_nestedComments()" + point_nestedComment);
-    });
-    // it('3.2. Did the function addPoint_nestedComments() give points to the user?', async () => {
-    //     assert.equal(await box.methods.getCount(account).call(),check_point);
-    // });
-});
-
-// 포인트 환급 요청에 따라 실행할 부분
-describe('[Testcase 4 : check ECAC Smart Contract for refunds()]', () => {
-    it('4.1. Is the function refunds() running correctly?', async () => {
-        try {
-            // refund를 실행하면 전체의 포인트에서 입력한 수만큼의 포인트를 빼주게 됨 
-            await box.methods.refunds(account, input).send({
-                from: accounts[0], 
-                gas: 1000000
-            }).then((receipt) => {
-                // console.log("Transaction receipt: ", receipt);
-                console.error("refunds SUCCESS");
-            }).catch((error) => {
-                console.error("Error: ", error);
-            });
-
-        }
-        catch (err) {
-            console.log(err.message);
-        }
-
-        // 위의 함수가 제대로 실행되었다면 지정한 100만큼 빠진 포인트가 남아있어야 함
-        let left_point = await box.methods.getCount(account).call();
-        console.log("User's Point after refunds() " + left_point);
-    });
-
-    // it('4.2. Did the function refunds() give money to the user account?', async () => {
-    //     // 계좌에는 원래 금액 + input 만큼의 잔액이 들어있어야함.
-    //     // 계좌에 지급하려면 어떻게 하지?? -> 지급 로직이 어떻게 되는지...
-    //     assert.equal(await box.methods.getCount(account).call(),check_point);
-    // });
 });

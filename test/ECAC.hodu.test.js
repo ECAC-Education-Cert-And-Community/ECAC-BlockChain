@@ -19,11 +19,11 @@ moment.tz.setDefault("Asia/Seoul");
 
 let accounts = [];
 // likes와 reflectedLikes 지정
-let likes = 701;
+let likes = 1701;
 let reflectedLikes = 0;
 
 // nestedComments와 Count지정
-let nestedComments = 61;
+let nestedComments = 221;
 
 let account;
 let address;
@@ -32,7 +32,7 @@ let address;
 var check_point;
 
 // 포인트 환급할 금액 설정 위한 변수
-let input = 100;
+let input = 0;
 
 // 스마트 컨트랙트 받아오기 위한 변수
 let box;
@@ -76,7 +76,7 @@ beforeEach(async () => {
 // 계좌 3 좋아요
 describe('[1: 계좌/유저 1개에 대한 좋아요 포인트 지급 함수 실행]', () => {
 
-    it('2. Is the function addPoint_likes() running correctly?', async () => {
+    it('좋아요 함수 시작', async () => {
         let point_like1 = await box.methods.getCount(account).call();
         console.log("User's Point before addPoint_likes() is : " + point_like1);
         try {
@@ -104,9 +104,9 @@ describe('[1: 계좌/유저 1개에 대한 좋아요 포인트 지급 함수 실
 // 계좌 3 대댓글
 describe('[2: 동일 계좌/유저 1개에 대한 대댓글 포인트 지급 함수 실행]', () => {
 
-    it('3.1. Is the function addPoint_nestedComments() running correctly?', async () => {
+    it('대댓글 함수 시작', async () => {
         let point_nestedComment1 = await box.methods.getCount(account).call();
-        console.log("User's Point before addPoint_nestedComments()" + point_nestedComment1);
+        console.log("User's Point before addPoint_nestedComments() is : " + point_nestedComment1);
         try {
             // 대댓글이 추가되었을 때 실행하면 사용자에게 100포인트를 지급해주는 함수 
             await box.methods.addPoint_nestedComments(account, nestedComments).send({
@@ -125,7 +125,7 @@ describe('[2: 동일 계좌/유저 1개에 대한 대댓글 포인트 지급 함
             console.log(err.message);
         }
         let point_nestedComment2 = await box.methods.getCount(account).call();
-        console.log("User's Point after addPoint_nestedComments()" + point_nestedComment2);
+        console.log("User's Point after addPoint_nestedComments() is : " + point_nestedComment2);
         eth_point = 0.001 * (point_nestedComment2 - point_nestedComment1);
         sender = accounts[0];
         receiver = account;
@@ -133,33 +133,33 @@ describe('[2: 동일 계좌/유저 1개에 대한 대댓글 포인트 지급 함
 });
 
 // 계좌 3 포인트 환급
-describe('[3: 동일 계좌/유저 1개에 대한 포인트 환급 함수 실행]', () => {
-    it('4. Is the function refunds() running correctly?', async () => {
-        let point = await box.methods.getCount(account).call();
-        console.log("User's Point before refunds() " + point);
-        try {
-            // refund를 실행하면 전체의 포인트에서 입력한 수만큼의 포인트를 빼주게 됨 
-            await box.methods.refunds(account, input).send({
-                from: accounts[0],
-                gas: 1000000
-            }).then((receipt) => {
-                // console.log("Transaction receipt: ", receipt);
-                console.error("refunds SUCCESS");
-            }).catch((error) => {
-                console.error("Error: ", error);
-            });
+// describe('[3: 동일 계좌/유저 1개에 대한 포인트 환급 함수 실행]', () => {
+//     it('환급 함수 시작', async () => {
+//         let point = await box.methods.getCount(account).call();
+//         console.log("User's Point before refunds() is : " + point);
+//         try {
+//             // refund를 실행하면 전체의 포인트에서 입력한 수만큼의 포인트를 빼주게 됨 
+//             await box.methods.refunds(account, input).send({
+//                 from: accounts[0],
+//                 gas: 1000000
+//             }).then((receipt) => {
+//                 // console.log("Transaction receipt: ", receipt);
+//                 console.error("refunds SUCCESS");
+//             }).catch((error) => {
+//                 console.error("Error: ", error);
+//             });
 
-        }
-        catch (err) {
-            console.log(err.message);
-        }
-        let left_point = await box.methods.getCount(account).call();
-        console.log("User's Point after refunds() " + left_point);
-        eth_point = 0.001 * (point - left_point);
-        sender = account;
-        receiver = accounts[0];
-    });
-});
+//         }
+//         catch (err) {
+//             console.log(err.message);
+//         }
+//         let left_point = await box.methods.getCount(account).call();
+//         console.log("User's Point after refunds() is : " + left_point);
+//         eth_point = 0.001 * (point - left_point);
+//         sender = account;
+//         receiver = accounts[0];
+//     });
+// });
 
 afterEach(async () => {
     if (eth_point != 0) {
@@ -170,17 +170,23 @@ afterEach(async () => {
         var balance2 = await web3.eth.getBalance(receiver);
         var balance2InEther = web3.utils.fromWei(balance2, 'ether');
         console.log("Get Receipient Balance Before : " + balance2InEther);
-        try {
-            const transact = {
-                from: sender,
-                to: receiver,
-                value: amount,
-            };
-            const receipt = await web3.eth.sendTransaction(transact);
-            console.log('송금 완료');
-        }
-        catch (err) {
-            console.error('송금 실패:', err);
+        let i=0.01;
+        var point_val = 0.01;
+        const val = web3.utils.toWei(point_val.toString(), 'ether');
+        while (i<=eth_point) {
+            try {
+                const transact = {
+                    from: sender,
+                    to: receiver,
+                    value: val,
+                };
+                const receipt = await web3.eth.sendTransaction(transact);
+                i += point_val;
+                console.log('송금 완료');
+            }
+            catch (err) {
+                console.error('송금 실패:', err);
+            }
         }
         balance1 = await web3.eth.getBalance(sender);
         balance1InEther = web3.utils.fromWei(balance1, 'ether');

@@ -19,11 +19,11 @@ moment.tz.setDefault("Asia/Seoul");
 
 let accounts = [];
 // likes와 reflectedLikes 지정
-let likes = 1701;
+let likes = 2601;
 let reflectedLikes = 0;
 
 // nestedComments와 Count지정
-let nestedComments = 221;
+let nestedComments = 361;
 
 let account;
 let address;
@@ -126,7 +126,7 @@ describe('[2: 동일 계좌/유저 1개에 대한 대댓글 포인트 지급 함
         }
         let point_nestedComment2 = await box.methods.getCount(account).call();
         console.log("User's Point after addPoint_nestedComments() is : " + point_nestedComment2);
-        eth_point = 0.001 * (point_nestedComment2 - point_nestedComment1);
+        eth_point += 0.001 * (point_nestedComment2 - point_nestedComment1);
         sender = accounts[0];
         receiver = account;
     });
@@ -162,7 +162,7 @@ describe('[2: 동일 계좌/유저 1개에 대한 대댓글 포인트 지급 함
 // });
 
 afterEach(async () => {
-    if (eth_point != 0) {
+    if (eth_point >= 0.1) {
         const amount = web3.utils.toWei(eth_point.toString(), 'ether');
         var balance1 = await web3.eth.getBalance(sender);
         var balance1InEther = web3.utils.fromWei(balance1, 'ether');
@@ -170,8 +170,8 @@ afterEach(async () => {
         var balance2 = await web3.eth.getBalance(receiver);
         var balance2InEther = web3.utils.fromWei(balance2, 'ether');
         console.log("Get Receipient Balance Before : " + balance2InEther);
-        let i=0.01;
-        var point_val = 0.01;
+        let i=0.1;
+        var point_val = 0.1;
         const val = web3.utils.toWei(point_val.toString(), 'ether');
         while (i<=eth_point) {
             try {
